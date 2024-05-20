@@ -10,7 +10,7 @@ import { ParentSize } from "@visx/responsive";
 import { AreaClosed, Bar, Line } from "@visx/shape";
 import { curveMonotoneX } from "@visx/curve";
 import { addDays, eachDayOfInterval } from "date-fns";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 export type DataPoint = { x: number; y: number; id?: string };
 
@@ -63,6 +63,8 @@ const AreaCurve = ({
     tooltipLeft = 0,
     tooltipTop = 0,
     tooltipData,
+    showTooltip,
+    hideTooltip,
   } = useTooltip<DataPoint>({
     // initial tooltip state
     tooltipOpen: true,
@@ -70,6 +72,8 @@ const AreaCurve = ({
     tooltipTop: height! / 3,
     tooltipData: undefined,
   });
+
+  const ref = useRef<SVGRectElement>(null);
 
   const [dragging, setDragging] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
@@ -100,9 +104,12 @@ const AreaCurve = ({
         <Group
           left={margin.left}
           top={margin.top}
+          width={width! - margin.left - margin.right}
+          height={height! - margin.top - margin.bottom}
           className={draggable ? "cursor-crosshair" : ""}
           onMouseDown={(e) => {
             if (!draggable) return;
+            hideTooltip();
             setDragging(true);
             setDragStart(null);
             setDragEnd(null);
@@ -113,7 +120,33 @@ const AreaCurve = ({
                 margin.right,
             );
           }}
+          onMouseLeave={() => {
+            hideTooltip();
+          }}
           onMouseMove={(e) => {
+            const left = e.clientX - ref.current!.getBoundingClientRect().left;
+            const x = xScale.invert(left).getTime();
+            const y =
+              aggregatedData.find(
+                (d, i) => x >= d.x && x < aggregatedData[i + 1]?.x,
+              )?.y ?? 0;
+
+            if (x < 0) {
+              hideTooltip();
+              return;
+            }
+
+            if (!dragging) {
+              showTooltip({
+                tooltipTop: yScale(y) - 30,
+                tooltipLeft: left + 50,
+                tooltipData: {
+                  x,
+                  y,
+                },
+              });
+            }
+
             if (!dragging) return;
             setDragEnd(
               e.clientX -
@@ -180,7 +213,14 @@ const AreaCurve = ({
             })}
           />
 
-          <rect x={0} y={0} width={width} height={height} fill="transparent" />
+          <rect
+            ref={ref}
+            x={0}
+            y={0}
+            width={xMax}
+            height={yMax}
+            fill="transparent"
+          />
 
           <AreaClosed
             data={aggregatedData}
@@ -204,6 +244,36 @@ const AreaCurve = ({
             />
           ))}
 
+          {tooltipData?.x && tooltipData?.y && (
+            <>
+              <circle
+                cx={xScale(tooltipData.x)}
+                cy={yScale(tooltipData.y)}
+                r={4}
+                fill={`${color}55`}
+                stroke={color}
+              />
+              <line
+                x1={xScale(tooltipData.x)}
+                x2={xScale(tooltipData.x)}
+                y1={0}
+                y2={yMax}
+                stroke={color}
+                strokeWidth={1}
+                opacity={0.3}
+              />
+              <line
+                y1={yScale(tooltipData.y)}
+                y2={yScale(tooltipData.y)}
+                x1={0}
+                x2={xMax}
+                stroke={color}
+                strokeWidth={1}
+                opacity={0.3}
+              />
+            </>
+          )}
+
           {dragStart && dragEnd && (
             <Bar
               x={Math.min(dragStart, dragEnd)}
@@ -225,7 +295,7 @@ const AreaCurve = ({
           left={tooltipLeft}
           style={{
             ...tooltipDefaultStyles,
-            backgroundColor: "var(--gray-600)",
+            backgroundColor: "#333",
             color: "white",
             zIndex: 100,
           }}
@@ -234,7 +304,9 @@ const AreaCurve = ({
             tooltipRender(tooltipData)
           ) : (
             <div className="p-1 flex flex-col gap-1">
-              <span className="font-bold">{tooltipData.x}</span>
+              <span className="font-bold">
+                {new Date(tooltipData.x).toLocaleDateString()}
+              </span>
               <span>{tooltipData.y.toFixed(integerYTicks ? 0 : 2)}</span>
             </div>
           )}
@@ -287,27 +359,3 @@ const aggregateData = (data: DataPoint[], days: number): DataPoint[] => {
     })
     .filter(Boolean) as DataPoint[];
 };
-
-// const aggregateData = (data: DataPoint[], days: number): DataPoint[] => {
-//   if (data.length === 0) return [];
-//
-//   // Ensure the data is sorted by date
-//   data.sort((a, b) => a.x - b.x);
-//
-//   const result: DataPoint[] = [];
-//   for (let i = 0; i < data.length; i++) {
-//     const start = new Date(data[i].x);
-//     const end = addDays(start, days - 1);
-//
-//     const windowData = data.filter((d) => {
-//       const date = new Date(d.x);
-//       return date >= start && date <= end;
-//     });
-//
-//     const totalY = windowData.reduce((sum, d) => sum + d.y, 0);
-//
-//     result.push({ x: start.getTime(), y: totalY });
-//   }
-//
-//   return result;
-// };

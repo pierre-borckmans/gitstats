@@ -14,6 +14,8 @@ import {
   DataPoint,
   ResponsiveChart as AreaCurve,
 } from "@/components/charts/AreaCurve.tsx";
+import { Progress } from "@/components/ui/progress";
+
 import { addDays } from "date-fns";
 type CommitDay = stats.CommitDay;
 type Commits = stats.Commits;
@@ -33,7 +35,6 @@ function App() {
     });
 
     EventsOn(events.Event.Commits, function (commits: any) {
-      // console.log(commits);
       setCommits(commits);
       setDateMin(
         Math.min(
@@ -151,9 +152,15 @@ function App() {
         <div className="flex flex-col items-center justify-center w-full h-full">
           {contributorsStats.length < contributors.length &&
             contributors.length > 0 && (
-              <div>
-                Computing stats for contributor {contributorsReceived}/
-                {contributors.length}
+              <div className="flex flex-col items-center justify-center w-full h-full gap-2">
+                <div>
+                  Computing stats for contributor {contributorsReceived}/
+                  {contributors.length}
+                </div>
+                <Progress
+                  value={(contributorsReceived / contributors.length) * 100}
+                  className="w-40"
+                />
               </div>
             )}
           {contributorsStats && (

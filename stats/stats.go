@@ -134,7 +134,6 @@ func getContributorStats(repoPath, contributor string) (int, int, int, []CommitD
 		}
 		if len(line) == 10 { // Date line
 			currentDate = strings.TrimSpace(line)
-			fmt.Println(currentDate)
 			continue
 		}
 

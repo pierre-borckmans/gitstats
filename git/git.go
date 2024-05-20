@@ -15,7 +15,6 @@ func RunGitCommand(repoPath string, args ...string) ([]byte, error) {
 	cmd.Stdout = &out
 	cmd.Stderr = &out // Capture stderr as well for debugging
 
-	fmt.Printf("Running command: git %s\n", strings.Join(cmd.Args[1:], " ")) // Debug print
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("Error running command: %s\n", err) // Print error for debugging
