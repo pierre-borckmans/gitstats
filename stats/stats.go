@@ -44,7 +44,13 @@ type Stats struct {
 
 // getContributors returns a list of all contributors in the repository.
 func getContributors(repoPath string) ([]string, error) {
-	out, err := git.RunGitCommand(repoPath, "shortlog", "master", "-sn")
+	branchOut, err := git.RunGitCommand(repoPath, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
+	if err != nil {
+		return nil, fmt.Errorf("error running git symbolic-ref: %v", err)
+	}
+	branch := strings.TrimSpace(string(branchOut))
+
+	out, err := git.RunGitCommand(repoPath, "shortlog", branch, "-sn")
 	if err != nil {
 		return nil, fmt.Errorf("error running git shortlog: %v", err)
 	}
