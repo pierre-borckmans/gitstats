@@ -36,12 +36,14 @@ export type HeatmapProps = {
   events?: boolean;
   data: DataPoint[];
   gap?: number;
+  minWeeks?: number;
   maxWeeks?: number;
 };
 
 function ActivityChart({
   width,
   data,
+  minWeeks = 52,
   maxWeeks = 52,
   gap = 3,
   margin = defaultMargin,
@@ -80,7 +82,7 @@ function ActivityChart({
   });
 
   const nbWeeks = binData.length;
-  const nbWeeksVisible = Math.min(nbWeeks, maxWeeks);
+  const nbWeeksVisible = Math.min(Math.max(nbWeeks, minWeeks), maxWeeks);
 
   const height =
     ((width - margin.left - margin.right) / nbWeeksVisible) * 7 +

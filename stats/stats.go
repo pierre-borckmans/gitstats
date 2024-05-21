@@ -42,13 +42,26 @@ type Stats struct {
 	Contributors []Contributor `json:"contributors"`
 }
 
+func getDefaultBranch(repoPath string) (string, error) {
+	output, err := git.RunGitCommand(repoPath, "ls-remote", "--symref", "origin", "HEAD")
+	if err != nil {
+		return "", fmt.Errorf("error running git ls-remote: %v", err)
+	}
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "ref: refs/heads/") {
+			parts := strings.Fields(line)
+			if len(parts) > 1 {
+				return strings.TrimPrefix(parts[1], "refs/heads/"), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("default branch not found")
+}
+
 // getContributors returns a list of all contributors in the repository.
 func getContributors(repoPath string) ([]string, error) {
-	branchOut, err := git.RunGitCommand(repoPath, "symbolic-ref", "--short", "refs/remotes/origin/HEAD")
-	if err != nil {
-		return nil, fmt.Errorf("error running git symbolic-ref: %v", err)
-	}
-	branch := strings.TrimSpace(string(branchOut))
+	branch, err := getDefaultBranch(repoPath)
 
 	out, err := git.RunGitCommand(repoPath, "shortlog", branch, "-sn")
 	if err != nil {
