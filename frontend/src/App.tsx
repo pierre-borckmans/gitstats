@@ -119,6 +119,7 @@ function App() {
             disabled={repoPath === ""}
             onClick={async () => {
               setError(null);
+              setContributors([]);
               setCommits(null);
               setContributorsReceived(0);
               setContributorsStats([]);

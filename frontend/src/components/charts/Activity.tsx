@@ -10,7 +10,7 @@ const cool3 = "#122549";
 function max<Datum>(data: Datum[], value: (d: Datum) => number): number {
   return Math.max(...data.map(value));
 }
-const weekDays = ["M", "T", "W", "T", "F", "S", "S"];
+const weekDays = ["S", "M", "T", "W", "T", "F", "S"];
 const weekDaysWidth = 20;
 
 const defaultMargin = { top: 20, left: 25, right: 25, bottom: 20 };
