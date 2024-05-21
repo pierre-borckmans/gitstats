@@ -17,6 +17,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 
 import { addDays } from "date-fns";
+import ActivityChart from "@/components/charts/Activity.tsx";
 type CommitDay = stats.CommitDay;
 type Commits = stats.Commits;
 type Contributor = stats.Contributor;
@@ -118,6 +119,7 @@ function App() {
             disabled={repoPath === ""}
             onClick={async () => {
               setError(null);
+              setCommits(null);
               setContributorsReceived(0);
               setContributorsStats([]);
               try {
@@ -134,20 +136,23 @@ function App() {
           <div className="text-red-500">Could not compute stats: {error}</div>
         )}
         {commits && (
-          <Commits
-            commits={commits}
-            onDragChange={(start, end) => {
-              setDateMin(
-                start ??
-                  Math.min(
-                    ...commits?.commits_per_day.map((d) =>
-                      new Date(d.date).getTime(),
+          <>
+            <Commits
+              commits={commits}
+              onDragChange={(start, end) => {
+                setDateMin(
+                  start ??
+                    Math.min(
+                      ...commits?.commits_per_day.map((d) =>
+                        new Date(d.date).getTime(),
+                      ),
                     ),
-                  ),
-              );
-              setDateMax(end ?? new Date().getTime());
-            }}
-          />
+                );
+                setDateMax(end ?? new Date().getTime());
+              }}
+            />
+            <Activity commits={commits} />
+          </>
         )}
         <div className="flex flex-col items-center justify-center w-full h-full">
           {contributorsStats.length < contributors.length &&
@@ -164,7 +169,7 @@ function App() {
               </div>
             )}
           {contributorsStats && (
-            <div className="grid grid-cols-2 gap-4 w-fit p-10">
+            <div className="grid grid-cols-2 gap-4 w-fit">
               {contribData
                 ?.sort((c1, c2) => (c1.commits < c2.commits ? 1 : -1))
                 .map((contributor) => (
@@ -225,6 +230,18 @@ const Commits = ({
   );
 };
 
+const Activity = ({ commits }: { commits: Commits }) => {
+  const data: DataPoint[] = commits.commits_per_day.map((day) => ({
+    x: new Date(day.date).getTime(),
+    y: day.count,
+  }));
+  return (
+    <div className="flex flex-col items-center justify-center w-fit h-full bg-[#f6f8fa] rounded">
+      <ActivityChart width={900} data={data} />
+    </div>
+  );
+};
+
 const Contributor = ({
   dateMin,
   dateMax,
@@ -258,9 +275,9 @@ const Contributor = ({
   return (
     <Card className="w-[440px] min-h-0 flex flex-col">
       <CardHeader className="space-y-0 py-2">
-        <CardTitle className="text-xl">{name}</CardTitle>
+        <CardTitle className="text-xl cursor-pointer">{name}</CardTitle>
         <CardDescription>
-          <div className="flex items-center gap-4">
+          <span className="flex items-center gap-4">
             <span>{commits.toLocaleString("en-US")} commits</span>
             <span className="text-green-500">
               {added.toLocaleString("en-US")} ++
@@ -268,7 +285,7 @@ const Contributor = ({
             <span className="text-red-500">
               {removed.toLocaleString("en-US")} --
             </span>
-          </div>
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent className={"flex w-full h-full bg-[#f6f8fa] py-2"}>
@@ -289,31 +306,3 @@ const Contributor = ({
     </Card>
   );
 };
-
-// const generateDateRange = (startDate: string, endDate?: string): string[] => {
-//   const start = new Date(startDate);
-//   const end = endDate ? new Date(endDate) : new Date();
-//   const dates: string[] = [];
-//   let currentDate = start;
-//
-//   while (currentDate <= end) {
-//     dates.push(currentDate.toISOString().split("T")[0]);
-//     currentDate.setDate(currentDate.getDate() + 1);
-//   }
-//
-//   return dates;
-// };
-//
-// const fillMissingDates = (
-//   data: CommitDay[],
-//   startDate: string,
-//   endDate?: string,
-// ): CommitDay[] => {
-//   const dateRange = generateDateRange(startDate, endDate);
-//   const dataMap = new Map(data.map((item) => [item.date, item.count]));
-//
-//   return dateRange.map((date) => ({
-//     date,
-//     count: dataMap.get(date) || 0,
-//   }));
-// };

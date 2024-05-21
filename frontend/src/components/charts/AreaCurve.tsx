@@ -235,6 +235,7 @@ const AreaCurve = ({
 
           {lines.map((l) => (
             <Line
+              key={l}
               x1={0}
               x2={xMax}
               y1={yScale(l)}
