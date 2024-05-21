@@ -44,7 +44,13 @@ function App() {
           ),
         ),
       );
-      setDateMax(new Date().getTime());
+      setDateMax(
+        Math.max(
+          ...commits?.commits_per_day.map((d: CommitDay) =>
+            new Date(d.date).getTime(),
+          ),
+        ),
+      );
     });
 
     EventsOn(events.Event.ContributorStats, function () {
@@ -149,7 +155,14 @@ function App() {
                       ),
                     ),
                 );
-                setDateMax(end ?? new Date().getTime());
+                setDateMax(
+                  end ??
+                    Math.max(
+                      ...commits?.commits_per_day.map((d) =>
+                        new Date(d.date).getTime(),
+                      ),
+                    ),
+                );
               }}
             />
             <Activity commits={commits} />
@@ -210,6 +223,9 @@ const Commits = ({
   const dateMin = Math.min(
     ...commits?.commits_per_day.map((d) => new Date(d.date).getTime()),
   );
+  const dateMax = Math.max(
+    ...commits?.commits_per_day.map((d) => new Date(d.date).getTime()),
+  );
 
   return (
     <div className="flex flex-col items-center justify-center w-fit h-full bg-[#f6f8fa] rounded">
@@ -223,7 +239,7 @@ const Commits = ({
         color="#93c09d"
         lines={[50, 100, 150]}
         dateMin={new Date(dateMin).getTime()}
-        dateMax={new Date().getTime()}
+        dateMax={new Date(dateMax).getTime()}
         draggable
         onDragChange={onDragChange}
       />

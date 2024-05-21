@@ -120,7 +120,7 @@ function ActivityChart({
           <Group top={margin.top} left={margin.left}>
             {weekDays.map((d, i) => (
               <text
-                key={d}
+                key={`week-day-${d}-${i}`}
                 x={weekDaysWidth / 2}
                 y={yScale(i + 1) - binHeight / 2 + gap / 2}
                 textAnchor="middle"
