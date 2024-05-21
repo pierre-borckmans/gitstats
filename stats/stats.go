@@ -109,8 +109,9 @@ func getCommits(repoPath string) (*Commits, error) {
 }
 
 func getContributorStats(repoPath, contributor string) (int, int, int, []CommitDay, error) {
+	contrib := strings.ReplaceAll(contributor, "[bot]", "")
 	// Get commits and their dates
-	outCommits, err := git.RunGitCommand(repoPath, "log", "--author="+contributor, "--pretty=format:%H %cd", "--date=short")
+	outCommits, err := git.RunGitCommand(repoPath, "log", "--author="+contrib, "--pretty=format:%H %cd", "--date=short")
 	if err != nil {
 		return 0, 0, 0, nil, fmt.Errorf("error running git log for commits: %v", err)
 	}
@@ -137,7 +138,7 @@ func getContributorStats(repoPath, contributor string) (int, int, int, []CommitD
 	}
 
 	// Get lines added and removed
-	outLines, err := git.RunGitCommand(repoPath, "log", "--author="+contributor, "--pretty=format:%cd", "--date=short", "--numstat")
+	outLines, err := git.RunGitCommand(repoPath, "log", "--author="+contrib, "--pretty=format:%cd", "--date=short", "--numstat")
 	if err != nil {
 		return 0, 0, 0, nil, fmt.Errorf("error running git log for lines: %v", err)
 	}
